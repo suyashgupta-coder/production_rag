@@ -1,0 +1,6 @@
+boto3
+python-dotenv
+gradio
+llama-index
+llama-index-llms-google-genai
+llama-index-retrievers-bedrock
