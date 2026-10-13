@@ -1,6 +1,6 @@
-boto3
+boto3==1.43.113
+botocore==1.43.113
 python-dotenv
 gradio
-llama-index
+llama-index-core
 llama-index-llms-google-genai
-llama-index-retrievers-bedrock

@@ -275,7 +275,8 @@ def search_knowledge_base(query: str) -> str:
             retrievalConfiguration={
                 "managedSearchConfiguration": {
                     "numberOfResults": 5
-                }
+                    }
+             
             },
 
             retrievalQuery={

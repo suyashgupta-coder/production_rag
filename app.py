@@ -1,6 +1,7 @@
-
+import os
 import gradio as gr
 from agent import get_agent_response
+
 
 # Custom CSS
 css = """
@@ -30,6 +31,7 @@ css = """
 }
 """
 
+
 # Suggested questions
 examples = [
     "What is Amazon's total revenue?",
@@ -41,22 +43,20 @@ examples = [
 
 # Agent response handler
 async def chat(user_message, history):
-    if not user_message or not user_message.strip():
-        return "", history or []
 
     history = list(history or [])
 
-    # Add user message to the UI
+    if not user_message or not user_message.strip():
+        return "", history
+
+    previous_history = history.copy()
+
     history.append({
         "role": "user",
         "content": user_message
     })
 
     try:
-        # Use only previous messages as context
-        previous_history = history[:-1]
-
-        # Call existing AI agent
         response = await get_agent_response(
             user_message,
             previous_history
@@ -68,9 +68,11 @@ async def chat(user_message, history):
         })
 
     except Exception as e:
+        print(f"Chat Error: {e}")
+
         history.append({
             "role": "assistant",
-            "content": f"⚠️ Error: {str(e)}"
+            "content": "⚠️ Something went wrong. Please check the server logs."
         })
 
     return "", history
@@ -81,34 +83,28 @@ def clear_chat():
     return [], ""
 
 
-# Create application
+# Create Gradio application
 def create_app():
 
     with gr.Blocks(
-        title="AI Business Intelligence Assistant",
-        theme=gr.themes.Soft(
-            primary_hue="blue",
-            neutral_hue="slate"
-        ),
-        css=css
+        title="AI Business Intelligence Assistant"
     ) as demo:
 
         # Header
-        gr.Markdown(
-            """
-            <div id="header">
-                <h1>✦ AI Business Intelligence</h1>
-                <p>Powered by Google Gemini + AWS Bedrock Knowledge Base</p>
-                <p>Ask questions. Explore financial data. Get AI-powered insights.</p>
-            </div>
-            """
-        )
+        gr.Markdown("""
+        <div id="header">
+            <h1>✦ AI Business Intelligence</h1>
+            <p>Powered by Google Gemini + AWS Bedrock Knowledge Base</p>
+            <p>Ask questions. Explore financial data. Get AI-powered insights.</p>
+        </div>
+        """)
 
-        # Main chat area
+        # Chatbot
         chatbot = gr.Chatbot(
             elem_id="chatbot",
             height=520,
             show_label=False,
+           
             placeholder=(
                 "👋 Welcome to your AI Business Assistant!\n\n"
                 "Ask me about company revenue, sales, "
@@ -118,6 +114,7 @@ def create_app():
 
         # Input section
         with gr.Row():
+
             message = gr.Textbox(
                 placeholder="Ask anything about your business data...",
                 show_label=False,
@@ -134,7 +131,7 @@ def create_app():
                 min_width=100
             )
 
-        # Action buttons
+        # Clear button
         with gr.Row():
             clear = gr.Button(
                 "🗑 Clear Conversation",
@@ -149,32 +146,28 @@ def create_app():
         )
 
         # Footer
-        gr.Markdown(
-            """
-            <div id="footer">
-                AI Business Intelligence Assistant |
-                Google Gemini • AWS Bedrock • LlamaIndex • Gradio
-            </div>
-            """
-        )
+        gr.Markdown("""
+        <div id="footer">
+            AI Business Intelligence Assistant |
+            Google Gemini • AWS Bedrock • LlamaIndex • Gradio
+        </div>
+        """)
 
         # Send message
         send.click(
             fn=chat,
             inputs=[message, chatbot],
-            outputs=[message, chatbot],
-            show_progress="full"
+            outputs=[message, chatbot]
         )
 
         # Enter to send
         message.submit(
             fn=chat,
             inputs=[message, chatbot],
-            outputs=[message, chatbot],
-            show_progress="full"
+            outputs=[message, chatbot]
         )
 
-        # Clear chat
+        # Clear conversation
         clear.click(
             fn=clear_chat,
             outputs=[chatbot, message]
@@ -185,13 +178,19 @@ def create_app():
 
 # Run application
 if __name__ == "__main__":
+
     app = create_app()
 
     app.queue()
 
     app.launch(
-        server_name="0.0.0.0",
+        server_name=os.getenv("GRADIO_SERVER_NAME", "127.0.0.1"),
         server_port=8080,
         share=False,
-        inbrowser=True
+        inbrowser=False,
+        theme=gr.themes.Soft(
+            primary_hue="blue",
+            neutral_hue="slate"
+        ),
+        css=css
     )
