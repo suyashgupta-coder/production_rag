@@ -184,7 +184,7 @@ if __name__ == "__main__":
     app.queue()
 
     app.launch(
-        server_name=os.getenv("GRADIO_SERVER_NAME", "127.0.0.1"),
+        server_name="0.0.0.0",
         server_port=8080,
         share=False,
         inbrowser=False,
